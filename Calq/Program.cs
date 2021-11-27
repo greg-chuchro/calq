@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Xml;
 
-namespace Calq {
+namespace Ghbvft6.Calq {
 
     internal static class Extension {
         public static void WaitForSuccess(this Process process) {

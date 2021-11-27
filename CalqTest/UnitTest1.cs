@@ -1,6 +1,6 @@
 using System;
 using Xunit;
-using Calq;
+using Ghbvft6.Calq;
 using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.IO.Pipes;
 
-namespace CalqTest {
+namespace Ghbvft6.CalqTest {
 
     internal static class Extension {
         public static void WaitForSuccess(this Process process) {

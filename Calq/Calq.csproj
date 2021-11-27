@@ -4,9 +4,12 @@
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <RootNamespace>Calq</RootNamespace>
-    <PackageId>Calq</PackageId>
+    <RootNamespace>Ghbvft6.Calq</RootNamespace>
+    <PackageId>Ghbvft6.Calq</PackageId>
     <Version>0.0.0</Version>
+
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>calq</ToolCommandName>
   </PropertyGroup>
 
   <ItemGroup>

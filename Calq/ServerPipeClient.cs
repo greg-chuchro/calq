@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 
-namespace Calq {
+namespace Ghbvft6.Calq {
     public class ServerPipeClient {
         readonly NamedPipeClientStream pipe;
         readonly StreamReader reader;

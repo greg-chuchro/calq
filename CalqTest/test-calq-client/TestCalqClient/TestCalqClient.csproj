@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>TestCalqClient</RootNamespace>
+    <PackageId>TestCalqClient</PackageId>
+    <Version>0.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="lib\**" />
+    <EmbeddedResource Remove="lib\**" />
+    <None Remove="lib\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ghbvft6.Calq.Client" Version="0.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="TestCalqServer.ServiceClient">
+      <HintPath>lib\TestCalqServer.ServiceClient.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

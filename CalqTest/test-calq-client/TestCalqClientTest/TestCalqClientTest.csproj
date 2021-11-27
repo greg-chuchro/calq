@@ -7,20 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="test-calq-server\**" />
-    <Content Include="test-calq-server\**">
-	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="test-calq-client\**" />
-    <Content Include="test-calq-client\**">
-	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
@@ -34,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Calq\Calq.csproj" />
+    <ProjectReference Include="..\TestCalqClient\TestCalqClient.csproj" />
   </ItemGroup>
 
 </Project>

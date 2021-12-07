@@ -117,6 +117,7 @@ namespace Ghbvft6.CalqTest {
             }
         }
 
+        // FIXME run dotnet "TestClientProjectFile" test --configuration Release instead
         [Fact]
         public void Test1() {
             new Program().Generate();
@@ -160,7 +161,7 @@ namespace Ghbvft6.CalqTest {
             Server = new(ServerProcess);
             Server.Exit();
 
-            Assert.Equal($"Hello World!{Environment.NewLine}Hello World! 1{Environment.NewLine}Hello World! 2{Environment.NewLine}Hello World! 3{Environment.NewLine}", output);
+            Assert.Equal($"foo{Environment.NewLine}foo 1{Environment.NewLine}foo 2{Environment.NewLine}foo 3{Environment.NewLine}foo nested{Environment.NewLine}", output);
         }
     }
 }

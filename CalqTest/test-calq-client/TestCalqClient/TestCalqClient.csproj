@@ -16,12 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ghbvft6.Calq.Client" Version="0.2.1" />
+    <PackageReference Include="Ghbvft6.Calq.Client" Version="0.2.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="TestCalqServer.ServiceClient">
-      <HintPath>lib\TestCalqServer.ServiceClient.dll</HintPath>
+    <Reference Include="TestCalqServer.HelloWorldServiceClient">
+      <HintPath>lib\TestCalqServer.HelloWorldServiceClient.dll</HintPath>
     </Reference>
   </ItemGroup>
 

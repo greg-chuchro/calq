@@ -128,7 +128,7 @@ namespace Ghbvft6.Calq {
             Process.Start(new ProcessStartInfo {
                 WorkingDirectory = CalqClientDir,
                 FileName = "dotnet",
-                Arguments = $"add package Ghbvft6.Calq.Client --version 0.2.1", // FIXME use the latest version
+                Arguments = $"add package Ghbvft6.Calq.Client --version 0.2.2", // FIXME use the latest version
                 RedirectStandardError = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true
@@ -138,14 +138,33 @@ namespace Ghbvft6.Calq {
 
             var assembly = LoadAssembly(AssemblyFile);
             var rootType = assembly.GetType(RootTypeFullName)!;
-            File.WriteAllText($"{CalqClientDir}/{CalqNamespace}.{rootType.Namespace}.{rootType.Name}.cs", GenerateCalqClass(rootType));
 
-            // FIXME use DFS
-            foreach (var field in rootType.GetFields()) {
-                var type = field.FieldType;
-                if (type.GetInterface("ICollection") != null) continue;
-                if (type.IsPrimitive || type.FullName == "System.String") continue;
+            var discoveredTypes = new HashSet<Type>();
+            var typeStack = new Stack<Type>();
+            discoveredTypes.Add(rootType);
+            typeStack.Push(rootType);
+
+            while (typeStack.Count > 0) {
+                var type = typeStack.Pop();
                 File.WriteAllText($"{CalqClientDir}/{CalqNamespace}.{type.Namespace}.{type.Name}.cs", GenerateCalqClass(type));
+                foreach (var member in type.GetFields()) {
+                    var memberType = member.FieldType;
+                    if (memberType.GetInterface("ICollection") != null) continue;
+                    if (memberType.IsPrimitive || memberType.FullName == "System.String") continue; // FIXME other "primitive" types
+                    if (discoveredTypes.Contains(memberType) == false) {
+                        discoveredTypes.Add(memberType);
+                        typeStack.Push(memberType);
+                    }
+                }
+                foreach (var member in type.GetProperties()) {
+                    var memberType = member.PropertyType;
+                    if (memberType.GetInterface("ICollection") != null) continue;
+                    if (memberType.IsPrimitive || memberType.FullName == "System.String") continue; // FIXME other "primitive" types
+                    if (discoveredTypes.Contains(memberType) == false) {
+                        discoveredTypes.Add(memberType);
+                        typeStack.Push(memberType);
+                    }
+                }
             }
 
             Process.Start(new ProcessStartInfo {
@@ -154,6 +173,8 @@ namespace Ghbvft6.Calq {
                 Arguments = $"build --configuration Release",
             })!.WaitForSuccess();
 
+
+            // TODO move to a separate class
             string GenerateClientClass() {
                 return $@"
 namespace {ClientNamespace} {{
@@ -170,7 +191,7 @@ namespace {ClientNamespace} {{
             string GenerateCalqClass(Type type) {
 
                 string GetMemberTypeFullName(Type memberType) {
-                    if (memberType.GetInterface("IList") != null) { // FIXME other collections // INFO IsAssignableTo() doesn't work
+                    if (memberType.GetInterface("IList") != null) { // FIXME other collections // IsAssignableTo() doesn't work
                         var elementType = memberType.GetGenericArguments()[0];
                         return $"Ghbvft6.Calq.Client.CalqList<Calq.{elementType.Namespace}.{elementType.Name}>";
                     } else {
@@ -184,7 +205,7 @@ namespace {ClientNamespace} {{
 
                 string GetBaseTypeFullName() {
                     if (type.BaseType!.FullName == "System.Object") {
-                        if (type.GetInterface("IList") != null) { // FIXME other collections // INFO IsAssignableTo() doesn't work
+                        if (type.GetInterface("IList") != null) { // FIXME other collections // IsAssignableTo() doesn't work
                             return "Ghbvft6.Calq.Client.CalqList";
                         } else {
                             return "Ghbvft6.Calq.Client.CalqObject";
@@ -195,11 +216,19 @@ namespace {ClientNamespace} {{
                 }
 
                 List<string> GetFieldDefinitions() {
-                    var fieldDefinitions = new List<string>();
-                    foreach (var field in type.GetFields()) {
-                        fieldDefinitions.Add($"public {GetMemberTypeFullName(field.FieldType)} {field.Name};"); 
+                    var memberDefinitions = new List<string>();
+                    foreach (var member in type.GetFields()) {
+                        memberDefinitions.Add($"public {GetMemberTypeFullName(member.FieldType)} {member.Name};"); 
                     }
-                    return fieldDefinitions;
+                    return memberDefinitions;
+                }
+
+                List<string> GetPropertyDefinitions() {
+                    var memberDefinitions = new List<string>();
+                    foreach (var member in type.GetProperties()) {
+                        memberDefinitions.Add($"public {GetMemberTypeFullName(member.PropertyType)} {member.Name};");
+                    }
+                    return memberDefinitions;
                 }
 
                 return $@"#pragma warning disable CS0649
@@ -208,6 +237,7 @@ namespace {CalqNamespace}.{type.Namespace} {{
     public class {type.Name} : {GetBaseTypeFullName()} {{
         internal {type.Name}(Ghbvft6.Calq.Client.ICalqObject parent, string name) : base(parent, name) {{ }}
         {string.Join("\n        ", GetFieldDefinitions())}
+        {string.Join("\n        ", GetPropertyDefinitions())}
     }}
 }}
 ";

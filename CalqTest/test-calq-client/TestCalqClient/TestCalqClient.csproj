@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ghbvft6.Calq.Client" Version="0.2.2" />
+    <PackageReference Include="Ghbvft6.Calq.Client" Version="0.3.0" />
   </ItemGroup>
 
   <ItemGroup>

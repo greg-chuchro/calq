@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 
 namespace TestCalqServer {
+    public class NestedResource {
+        public string NestedProperty { get; set; }
+        public NestedResource() {
+            NestedProperty = "foo nested";
+        }
+    }
+    public class Resource {
+        private NestedResource privateField = new();
+        public string field = "foo";
+        public NestedResource Property { get => privateField; set => privateField = value; }
+    }
     class HelloWorldService {
-        public class NestedResource {
-            public string NestedProperty { get => "foo nested"; }
-        }
-        public class Resource {
-            private NestedResource privateField = new();
-            public string field = "foo";
-            public NestedResource Property { get => privateField; }
-        }
-
         public Resource item = new();
         public List<Resource> collection = new() {
             new Resource { field = "foo 1" },

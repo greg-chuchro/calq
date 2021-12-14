@@ -128,13 +128,16 @@ namespace Ghbvft6.Calq {
             Process.Start(new ProcessStartInfo {
                 WorkingDirectory = CalqClientDir,
                 FileName = "dotnet",
-                Arguments = $"add package Ghbvft6.Calq.Client --version 0.2.2", // FIXME use the latest version
+                Arguments = $"add package Ghbvft6.Calq.Client --version 0.3.0", // FIXME use the latest version
                 RedirectStandardError = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true
             })!.WaitForSuccess();
 
             File.WriteAllText($"{CalqClientDir}/{ClientNamespace}.Client.cs", GenerateClientClass());
+            File.WriteAllText($"{CalqClientDir}/{ClientNamespace}.CalqObject.cs", GenerateCalqObjectClass());
+            File.WriteAllText($"{CalqClientDir}/{ClientNamespace}.CalqList.cs", GenerateCalqListClass());
+            File.WriteAllText($"{CalqClientDir}/{ClientNamespace}.CalqObjectList.cs", GenerateCalqObjectListClass());
 
             var assembly = LoadAssembly(AssemblyFile);
             var rootType = assembly.GetType(RootTypeFullName)!;
@@ -181,8 +184,122 @@ namespace {ClientNamespace} {{
     public class Client : Ghbvft6.Calq.Client.CalqClient {{
         private static readonly Client instance = new(""{Prefix}"");
         public static Client Instance {{ get => instance; }}
-        public Calq.{RootTypeFullName} service = new(null, """");
+        public Calq.{RootTypeFullName} service = new();
         public Client(string url) : base(new System.Net.Http.HttpClient {{ BaseAddress = new System.Uri(url) }}) {{ }}
+    }}
+}}
+";
+            }
+
+            string GenerateCalqObjectClass() {
+                return $@"#nullable enable
+using Ghbvft6.Calq.Client;
+
+namespace {ClientNamespace} {{
+    public class CalqObject : ICalqObject {{
+        private ICalqObject? Parent {{ get; set; }}
+        private string? Name {{ get; set; }}
+
+        ICalqObject? ICalqObject.Parent => Parent;
+        string? ICalqObject.Name => Name;
+
+        public CalqObject() {{ }}
+
+        internal void Attach(ICalqObject parent, string name) {{
+            Parent = parent;
+            Name = name;
+        }}
+    }}
+}}
+";
+            }
+
+            string GenerateCalqListClass() {
+                return $@"#nullable enable
+using Ghbvft6.Calq.Client;
+using System.Collections.Generic;
+
+namespace {ClientNamespace} {{
+
+    public class CalqList<T> : List<T>, ICalqObject {{
+        private ICalqObject? Parent {{ get; set; }}
+        private string? Name {{ get; set; }}
+
+        ICalqObject? ICalqObject.Parent => Parent;
+        string? ICalqObject.Name => Name;
+
+        public CalqList() {{ }}
+
+        internal void Attach(ICalqObject parent, string name) {{
+            Parent = parent;
+            Name = name;
+        }}
+    }}
+}}
+";
+            }
+
+            string GenerateCalqObjectListClass() {
+                return $@"#nullable enable
+#pragma warning disable CS8601
+#pragma warning disable CS8604
+
+using Ghbvft6.Calq.Client;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace {ClientNamespace} {{
+
+    public class CalqObjectList<T> : List<T>, ICalqObject, ICollection<T>, IEnumerable<T>, IEnumerable, IList<T>, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IList where T : CalqObject {{
+        private ICalqObject? Parent {{ get; set; }}
+        private string? Name {{ get; set; }}
+
+        ICalqObject? ICalqObject.Parent => Parent;
+        string? ICalqObject.Name => Name;
+
+        public CalqObjectList() {{ }}
+
+        internal void Attach(ICalqObject parent, string name) {{
+            Parent = parent;
+            Name = name;
+        }}
+
+        public int Add(object? value) {{
+            ((T?)value)?.Attach(this, this.Count.ToString());
+            Add((T?)value);
+            return this.Count;
+        }}
+
+        public void Insert(int index, object? value) {{
+            ((T?)value)?.Attach(this, this.Count.ToString());
+            base.Insert(index, (T?)value);
+        }}
+
+        new public void Add(T item) {{
+            item?.Attach(this, this.Count.ToString());
+            base.Add(item);
+        }}
+
+        new public void Insert(int index, T item) {{
+            item?.Attach(this, this.Count.ToString());
+            base.Insert(index, item);
+        }}
+
+        new public T this[int i] {{
+            get => base[i];
+            set {{
+                value?.Attach(this, i.ToString());
+                base[i] = value;
+            }}
+        }}
+        new public void AddRange(IEnumerable<T> collection) {{
+            var count = this.Count;
+            foreach (var item in collection) {{
+                item?.Attach(this, count.ToString());
+                ++count;
+            }}
+            base.AddRange(collection);
+        }}
     }}
 }}
 ";
@@ -192,8 +309,12 @@ namespace {ClientNamespace} {{
 
                 string GetMemberTypeFullName(Type memberType) {
                     if (memberType.GetInterface("IList") != null) { // FIXME other collections // IsAssignableTo() doesn't work
-                        var elementType = memberType.GetGenericArguments()[0];
-                        return $"Ghbvft6.Calq.Client.CalqList<Calq.{elementType.Namespace}.{elementType.Name}>";
+                        var itemType = memberType.GetGenericArguments()[0];
+                        if (itemType.IsPrimitive || itemType.FullName == "System.String") { // FIXME add Decimal etc.
+                            return $"global::{ClientNamespace}.CalqList<Calq.{itemType.Namespace}.{itemType.Name}>";
+                        } else {
+                            return $"global::{ClientNamespace}.CalqObjectList<Calq.{itemType.Namespace}.{itemType.Name}>";
+                        }
                     } else {
                         if (memberType.IsPrimitive || memberType.FullName == "System.String") { // FIXME add Decimal etc.
                             return $"{memberType.Namespace}.{memberType.Name}";
@@ -206,19 +327,43 @@ namespace {ClientNamespace} {{
                 string GetBaseTypeFullName() {
                     if (type.BaseType!.FullName == "System.Object") {
                         if (type.GetInterface("IList") != null) { // FIXME other collections // IsAssignableTo() doesn't work
-                            return "Ghbvft6.Calq.Client.CalqList";
+                            return $"global::{ClientNamespace}.CalqList";
                         } else {
-                            return "Ghbvft6.Calq.Client.CalqObject";
+                            return $"global::{ClientNamespace}.CalqObject";
                         }
                     } else {
                         return $"{type.BaseType.Namespace}.{type.BaseType.Name}";
                     }
                 }
 
+                List<string> GetPrivateFieldDefinitions() {
+                    var memberDefinitions = new List<string>();
+                    foreach (var member in type.GetProperties()) {
+                        var memberType = member.PropertyType;
+                        if (memberType.IsPrimitive || memberType.FullName == "System.String") { // FIXME add Decimal etc.
+                        } else {
+                            memberDefinitions.Add($"private {GetMemberTypeFullName(memberType)}? _{member.Name};");
+                        }
+                    }
+                    foreach (var member in type.GetFields()) {
+                        var memberType = member.FieldType;
+                        if (memberType.IsPrimitive || memberType.FullName == "System.String") { // FIXME add Decimal etc.
+                        } else {
+                            memberDefinitions.Add($"private {GetMemberTypeFullName(memberType)}? _{member.Name};");
+                        }
+                    }
+                    return memberDefinitions;
+                }
+
                 List<string> GetFieldDefinitions() {
                     var memberDefinitions = new List<string>();
                     foreach (var member in type.GetFields()) {
-                        memberDefinitions.Add($"public {GetMemberTypeFullName(member.FieldType)} {member.Name};"); 
+                        var memberType = member.FieldType;
+                        if (memberType.IsPrimitive || memberType.FullName == "System.String") { // FIXME add Decimal etc.
+                            memberDefinitions.Add($"public {GetMemberTypeFullName(memberType)} {member.Name};");
+                        } else {
+                            memberDefinitions.Add($"public {GetMemberTypeFullName(memberType)}? {member.Name} {{ get => _{member.Name}; set {{ value?.Attach(this, nameof({member.Name})); _{member.Name} = value; }} }}");
+                        }
                     }
                     return memberDefinitions;
                 }
@@ -226,16 +371,24 @@ namespace {ClientNamespace} {{
                 List<string> GetPropertyDefinitions() {
                     var memberDefinitions = new List<string>();
                     foreach (var member in type.GetProperties()) {
-                        memberDefinitions.Add($"public {GetMemberTypeFullName(member.PropertyType)} {member.Name};");
+                        var memberType = member.PropertyType;
+                        if (memberType.IsPrimitive || memberType.FullName == "System.String") { // FIXME add Decimal etc.
+                            memberDefinitions.Add($"public {GetMemberTypeFullName(memberType)} {member.Name};");
+                        } else {
+                            memberDefinitions.Add($"public {GetMemberTypeFullName(memberType)}? {member.Name} {{ get => _{member.Name}; set {{ value?.Attach(this, nameof({member.Name})); _{member.Name} = value; }} }}");
+                        }
                     }
                     return memberDefinitions;
                 }
 
                 return $@"#pragma warning disable CS0649
+#pragma warning disable CS8618
+#nullable enable
 
 namespace {CalqNamespace}.{type.Namespace} {{
     public class {type.Name} : {GetBaseTypeFullName()} {{
-        internal {type.Name}(Ghbvft6.Calq.Client.ICalqObject parent, string name) : base(parent, name) {{ }}
+        public {type.Name}() {{ }}
+        {string.Join("\n        ", GetPrivateFieldDefinitions())}
         {string.Join("\n        ", GetFieldDefinitions())}
         {string.Join("\n        ", GetPropertyDefinitions())}
     }}

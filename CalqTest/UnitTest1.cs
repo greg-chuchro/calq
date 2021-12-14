@@ -161,7 +161,7 @@ namespace Ghbvft6.CalqTest {
             Server = new(ServerProcess);
             Server.Exit();
 
-            Assert.Equal($"foo{Environment.NewLine}foo 1{Environment.NewLine}foo 2{Environment.NewLine}foo 3{Environment.NewLine}foo nested{Environment.NewLine}", output);
+            Assert.Equal($"foo{Environment.NewLine}foo 1{Environment.NewLine}foo 2{Environment.NewLine}foo local{Environment.NewLine}foo 3{Environment.NewLine}foo nested{Environment.NewLine}foo changed{Environment.NewLine}foo changed{Environment.NewLine}", output);
         }
     }
 }

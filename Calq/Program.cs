@@ -178,14 +178,33 @@ namespace Ghbvft6.Calq {
 
 
             // TODO move to a separate class
+            // TODO disposable
             string GenerateClientClass() {
-                return $@"
+                return $@"#nullable enable
+using System.Threading;
+
 namespace {ClientNamespace} {{
     public class Client : Ghbvft6.Calq.Client.CalqClient {{
-        private static readonly Client instance = new(""{Prefix}"");
-        public static Client Instance {{ get => instance; }}
-        public Calq.{RootTypeFullName} service = new();
-        public Client(string url) : base(new System.Net.Http.HttpClient {{ BaseAddress = new System.Uri(url) }}) {{ }}
+        private static Client? defaultInstance;
+        private static ThreadLocal<Client?> threadLocal;
+
+        public static Client? DefaultInstance {{ get => defaultInstance; protected set => defaultInstance = value; }}
+        public static Client? ThreadLocalInstance {{ get => threadLocal.Value; protected set => threadLocal.Value = value; }}
+
+        static Client() {{
+            defaultInstance = new(""{Prefix}"");
+            threadLocal = new(() => defaultInstance);
+        }}
+
+        private readonly Calq.{RootTypeFullName} service;
+        public Calq.{RootTypeFullName} Service {{ get => service; }}
+
+        public Client() : base(new System.Net.Http.HttpClient {{ BaseAddress = new System.Uri(""{Prefix}"") }}) {{
+            service = new();
+        }}
+        public Client(string url) : base(new System.Net.Http.HttpClient {{ BaseAddress = new System.Uri(url) }}) {{
+            service = new();
+        }}
     }}
 }}
 ";
@@ -208,6 +227,26 @@ namespace {ClientNamespace} {{
         internal void Attach(ICalqObject parent, string name) {{
             Parent = parent;
             Name = name;
+        }}
+
+        public void Get() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Get(this);
+        }}
+
+        public void Post() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Post(this);
+        }}
+
+        public void Put() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Put(this);
+        }}
+
+        public void Delete() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Delete(this);
+        }}
+
+        public void Patch() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Patch(this);
         }}
     }}
 }}
@@ -233,6 +272,26 @@ namespace {ClientNamespace} {{
         internal void Attach(ICalqObject parent, string name) {{
             Parent = parent;
             Name = name;
+        }}
+
+        public void Get() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Get(this);
+        }}
+
+        public void Post() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Post(this);
+        }}
+
+        public void Put() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Put(this);
+        }}
+
+        public void Delete() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Delete(this);
+        }}
+
+        public void Patch() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Patch(this);
         }}
     }}
 }}
@@ -262,6 +321,26 @@ namespace {ClientNamespace} {{
         internal void Attach(ICalqObject parent, string name) {{
             Parent = parent;
             Name = name;
+        }}
+
+        public void Get() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Get(this);
+        }}
+
+        public void Post() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Post(this);
+        }}
+
+        public void Put() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Put(this);
+        }}
+
+        public void Delete() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Delete(this);
+        }}
+
+        public void Patch() {{
+            {ClientNamespace}.Client.ThreadLocalInstance!.Patch(this);
         }}
 
         public int Add(object? value) {{

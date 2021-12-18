@@ -6,7 +6,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>Ghbvft6.Calq</RootNamespace>
     <PackageId>Ghbvft6.Calq</PackageId>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
 
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>calq</ToolCommandName>

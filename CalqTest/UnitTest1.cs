@@ -70,7 +70,7 @@ namespace Ghbvft6.CalqTest {
             Prefix = Server.Prefix;
             Server.Exit();
 
-            ClientNamespace = $"{RootTypeFullName}Client";
+            ClientNamespace = RootTypeFullName[0..RootTypeFullName.LastIndexOf('.')];
             CalqNamespace = "Calq";
 
             CalqClientDir = $"{CalqDir}/{ClientNamespace}";

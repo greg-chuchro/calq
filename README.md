@@ -1,6 +1,6 @@
 # calq
 Calq (/kælk/) is an open-source, cross-platform framework that automates the development of RESTful and RPC API.
-Calq makes it easier to create highly secure web apps, online games, and all other kinds of cloud-based multi-tier applications.
+Calq makes it easier to create microservices, web apps, online games, and all other kinds of cloud-based multi-tier applications.
 
 ## Get Started
 ```
@@ -39,25 +39,25 @@ The generated DLL will contain a ready to use client class and all necessary cla
 [CalqTest/test-calq-server/TestCalqServer/HelloWorldService.cs](CalqTest/test-calq-server/TestCalqServer/HelloWorldService.cs)
 ```csharp
 public class NestedResource {
-    public string NestedProperty { get; set; }
+    public string Property { get; set; }
     public NestedResource() {
-        NestedProperty = "foo";
+        Property = "foo";
     }
 }
 public class Resource {
-    private NestedResource privateField = new();
+    private NestedResource nestedResource = new();
     public string field = "foo";
-    public NestedResource Property { get => privateField; set => privateField = value; }
+    public NestedResource NestedResource { get => nestedResource; set => nestedResource = value; }
 }
-class HelloWorldService {
-    public Resource item = new();
+class TestService {
+    public Resource resource = new();
     public List<Resource> collection = new() {
         new() { field = "foo 1" },
         new() { field = "foo 2" }
     };
 
     static void Main() {
-        var service = new HelloWorldService();
+        var service = new TestService();
         var server = new CalqServer(service) {
             Prefixes = new[] { "http://localhost:8078/" }
         };
@@ -69,35 +69,35 @@ class HelloWorldService {
 ```csharp
 class Program {
     static void Main() {
-        var service = TestCalqServer.HelloWorldServiceClient.Client.DefaultInstance.Service;
+        var service = TestServiceClient.DefaultInstance.Service;
         service.Get(); // get everything
 
-        var item = service.item;
+        var resource = service.resource;
         var collection = service.collection;
 
-        WriteLine(item.field); // foo
-        foreach (var element in collection) {
-            WriteLine(element.field);
+        WriteLine(resource.field); // foo
+        foreach (var item in collection) {
+            WriteLine(item.field);
             // foo 1
             // foo 2
         }
-        WriteLine(item.Property.NestedProperty); // foo
+        WriteLine(resource.NestedResource.Property); // foo
 
-        item.field = "foo x"; // change locally
-        WriteLine(item.field); // foo x
-        item.Put(); // update server
-        item.field = "foo y"; // change locally
-        WriteLine(item.field); // foo y
-        item.Get(); // overwrite local changes
-        WriteLine(item.field); // foo x
+        resource.field = "foo x"; // change locally
+        WriteLine(resource.field); // foo x
+        resource.Put(); // update server
+        resource.field = "foo y"; // change locally
+        WriteLine(resource.field); // foo y
+        resource.Get(); // overwrite local changes
+        WriteLine(resource.field); // foo x
 
-        item.Property = new() { NestedProperty = "foo x" }; // change locally
-        WriteLine(item.Property.NestedProperty); // foo x
-        item.Property.Put(); // update server
-        item.Property.NestedProperty = "foo y"; // change locally
-        WriteLine(item.Property.NestedProperty); // foo y
-        item.Property.Get(); // overwrite local changes
-        WriteLine(item.Property.NestedProperty); // foo x
+        resource.NestedResource = new() { Property = "foo x" }; // change locally
+        WriteLine(resource.NestedResource.Property); // foo x
+        resource.NestedResource.Put(); // update server
+        resource.NestedResource.Property = "foo y"; // change locally
+        WriteLine(resource.NestedResource.Property); // foo y
+        resource.NestedResource.Get(); // overwrite local changes
+        WriteLine(resource.NestedResource.Property); // foo x
     }
 }
 ```

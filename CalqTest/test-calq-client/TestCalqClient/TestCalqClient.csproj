@@ -20,8 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="TestCalqServer.HelloWorldServiceClient">
-      <HintPath>lib\TestCalqServer.HelloWorldServiceClient.dll</HintPath>
+    <Reference Include="TestCalqServer">
+      <HintPath>lib\TestCalqServer.dll</HintPath>
     </Reference>
   </ItemGroup>
 

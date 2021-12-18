@@ -27,8 +27,9 @@ namespace Ghbvft6.Calq {
         private Process ServerProcess { get; set; }
         private ServerPipeClient Server { get; set; }
         private string RootTypeFullName { get; set; }
+        private string RootTypeNamespace { get; set; }
         private string Prefix { get; set; }
-        private string ClientNamespace { get; set; }
+        private string ClientClassName { get; set; }
         private string CalqNamespace { get; set; }
         private string CalqClientDir { get; set; }
 
@@ -70,10 +71,11 @@ namespace Ghbvft6.Calq {
             Prefix = Server.Prefix;
             Server.Exit();
 
-            ClientNamespace = $"{RootTypeFullName}Client";
+            RootTypeNamespace = RootTypeFullName[0..RootTypeFullName.LastIndexOf('.')];
+            ClientClassName = $"{RootTypeFullName[(RootTypeFullName.LastIndexOf('.') + 1)..]}Client";
             CalqNamespace = "Calq";
 
-            CalqClientDir = $"{CalqDir}/{ClientNamespace}";
+            CalqClientDir = $"{CalqDir}/{RootTypeNamespace}";
 
             static string GetProjectFile() {
                 var projectFiles = Directory.GetFiles("./", "*.csproj", SearchOption.AllDirectories); // FIXME fsproj
@@ -115,7 +117,7 @@ namespace Ghbvft6.Calq {
             Process.Start(new ProcessStartInfo {
                 WorkingDirectory = CalqDir,
                 FileName = "dotnet",
-                Arguments = $"new classlib --name {ClientNamespace}",
+                Arguments = $"new classlib --name {RootTypeNamespace}",
                 RedirectStandardError = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true
@@ -134,10 +136,10 @@ namespace Ghbvft6.Calq {
                 RedirectStandardOutput = true
             })!.WaitForSuccess();
 
-            File.WriteAllText($"{CalqClientDir}/{ClientNamespace}.Client.cs", GenerateClientClass());
-            File.WriteAllText($"{CalqClientDir}/{ClientNamespace}.CalqObject.cs", GenerateCalqObjectClass());
-            File.WriteAllText($"{CalqClientDir}/{ClientNamespace}.CalqList.cs", GenerateCalqListClass());
-            File.WriteAllText($"{CalqClientDir}/{ClientNamespace}.CalqObjectList.cs", GenerateCalqObjectListClass());
+            File.WriteAllText($"{CalqClientDir}/{RootTypeNamespace}.{ClientClassName}.cs", GenerateClientClass());
+            File.WriteAllText($"{CalqClientDir}/{RootTypeNamespace}.Calq.CalqObject.cs", GenerateCalqObjectClass());
+            File.WriteAllText($"{CalqClientDir}/{RootTypeNamespace}.Calq.CalqList.cs", GenerateCalqListClass());
+            File.WriteAllText($"{CalqClientDir}/{RootTypeNamespace}.Calq.CalqObjectList.cs", GenerateCalqObjectListClass());
 
             var assembly = LoadAssembly(AssemblyFile);
             var rootType = assembly.GetType(RootTypeFullName)!;
@@ -183,26 +185,26 @@ namespace Ghbvft6.Calq {
                 return $@"#nullable enable
 using System.Threading;
 
-namespace {ClientNamespace} {{
-    public class Client : Ghbvft6.Calq.Client.CalqClient {{
-        private static Client? defaultInstance;
-        private static ThreadLocal<Client?> threadLocal;
+namespace {RootTypeNamespace} {{
+    public class {ClientClassName} : Ghbvft6.Calq.Client.CalqClient {{
+        private static {ClientClassName}? defaultInstance;
+        private static ThreadLocal<{ClientClassName}?> threadLocal;
 
-        public static Client? DefaultInstance {{ get => defaultInstance; protected set => defaultInstance = value; }}
-        public static Client? ThreadLocalInstance {{ get => threadLocal.Value; protected set => threadLocal.Value = value; }}
+        public static {ClientClassName}? DefaultInstance {{ get => defaultInstance; protected set => defaultInstance = value; }}
+        public static {ClientClassName}? ThreadLocalInstance {{ get => threadLocal.Value; protected set => threadLocal.Value = value; }}
 
-        static Client() {{
+        static {ClientClassName}() {{
             defaultInstance = new(""{Prefix}"");
             threadLocal = new(() => defaultInstance);
         }}
 
-        private readonly Calq.{RootTypeFullName} service;
-        public Calq.{RootTypeFullName} Service {{ get => service; }}
+        private readonly global::Calq.{RootTypeFullName} service;
+        public global::Calq.{RootTypeFullName} Service {{ get => service; }}
 
-        public Client() : base(new System.Net.Http.HttpClient {{ BaseAddress = new System.Uri(""{Prefix}"") }}) {{
+        public {ClientClassName}() : base(new System.Net.Http.HttpClient {{ BaseAddress = new System.Uri(""{Prefix}"") }}) {{
             service = new();
         }}
-        public Client(string url) : base(new System.Net.Http.HttpClient {{ BaseAddress = new System.Uri(url) }}) {{
+        public {ClientClassName}(string url) : base(new System.Net.Http.HttpClient {{ BaseAddress = new System.Uri(url) }}) {{
             service = new();
         }}
     }}
@@ -214,7 +216,7 @@ namespace {ClientNamespace} {{
                 return $@"#nullable enable
 using Ghbvft6.Calq.Client;
 
-namespace {ClientNamespace} {{
+namespace {RootTypeNamespace}.Calq {{
     public class CalqObject : ICalqObject {{
         private ICalqObject? Parent {{ get; set; }}
         private string? Name {{ get; set; }}
@@ -230,23 +232,23 @@ namespace {ClientNamespace} {{
         }}
 
         public void Get() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Get(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Get(this);
         }}
 
         public void Post() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Post(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Post(this);
         }}
 
         public void Put() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Put(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Put(this);
         }}
 
         public void Delete() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Delete(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Delete(this);
         }}
 
         public void Patch() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Patch(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Patch(this);
         }}
     }}
 }}
@@ -258,7 +260,7 @@ namespace {ClientNamespace} {{
 using Ghbvft6.Calq.Client;
 using System.Collections.Generic;
 
-namespace {ClientNamespace} {{
+namespace {RootTypeNamespace}.Calq {{
 
     public class CalqList<T> : List<T>, ICalqObject {{
         private ICalqObject? Parent {{ get; set; }}
@@ -275,23 +277,23 @@ namespace {ClientNamespace} {{
         }}
 
         public void Get() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Get(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Get(this);
         }}
 
         public void Post() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Post(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Post(this);
         }}
 
         public void Put() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Put(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Put(this);
         }}
 
         public void Delete() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Delete(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Delete(this);
         }}
 
         public void Patch() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Patch(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Patch(this);
         }}
     }}
 }}
@@ -307,7 +309,7 @@ using Ghbvft6.Calq.Client;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace {ClientNamespace} {{
+namespace {RootTypeNamespace}.Calq {{
 
     public class CalqObjectList<T> : List<T>, ICalqObject, ICollection<T>, IEnumerable<T>, IEnumerable, IList<T>, IReadOnlyCollection<T>, IReadOnlyList<T>, ICollection, IList where T : CalqObject {{
         private ICalqObject? Parent {{ get; set; }}
@@ -324,23 +326,23 @@ namespace {ClientNamespace} {{
         }}
 
         public void Get() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Get(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Get(this);
         }}
 
         public void Post() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Post(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Post(this);
         }}
 
         public void Put() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Put(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Put(this);
         }}
 
         public void Delete() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Delete(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Delete(this);
         }}
 
         public void Patch() {{
-            {ClientNamespace}.Client.ThreadLocalInstance!.Patch(this);
+            {RootTypeNamespace}.{ClientClassName}.ThreadLocalInstance!.Patch(this);
         }}
 
         public int Add(object? value) {{
@@ -390,9 +392,9 @@ namespace {ClientNamespace} {{
                     if (memberType.GetInterface("IList") != null) { // FIXME other collections // IsAssignableTo() doesn't work
                         var itemType = memberType.GetGenericArguments()[0];
                         if (itemType.IsPrimitive || itemType.FullName == "System.String") { // FIXME add Decimal etc.
-                            return $"global::{ClientNamespace}.CalqList<Calq.{itemType.Namespace}.{itemType.Name}>";
+                            return $"global::{RootTypeNamespace}.Calq.CalqList<Calq.{itemType.Namespace}.{itemType.Name}>";
                         } else {
-                            return $"global::{ClientNamespace}.CalqObjectList<Calq.{itemType.Namespace}.{itemType.Name}>";
+                            return $"global::{RootTypeNamespace}.Calq.CalqObjectList<Calq.{itemType.Namespace}.{itemType.Name}>";
                         }
                     } else {
                         if (memberType.IsPrimitive || memberType.FullName == "System.String") { // FIXME add Decimal etc.
@@ -406,9 +408,9 @@ namespace {ClientNamespace} {{
                 string GetBaseTypeFullName() {
                     if (type.BaseType!.FullName == "System.Object") {
                         if (type.GetInterface("IList") != null) { // FIXME other collections // IsAssignableTo() doesn't work
-                            return $"global::{ClientNamespace}.CalqList";
+                            return $"global::{RootTypeNamespace}.Calq.CalqList";
                         } else {
-                            return $"global::{ClientNamespace}.CalqObject";
+                            return $"global::{RootTypeNamespace}.Calq.CalqObject";
                         }
                     } else {
                         return $"{type.BaseType.Namespace}.{type.BaseType.Name}";

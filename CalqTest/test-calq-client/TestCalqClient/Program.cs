@@ -1,38 +1,39 @@
 ﻿using System;
+using TestCalqServer;
 using static System.Console;
 
 namespace TestCalqClient {
     class Program {
         static void Main() {
-            var service = TestCalqServer.HelloWorldServiceClient.Client.DefaultInstance.Service;
+            var service = TestServiceClient.DefaultInstance.Service;
             service.Get(); // get everything
 
-            var item = service.item;
+            var resource = service.resource;
             var collection = service.collection;
 
-            WriteLine(item.field); // foo
-            foreach (var element in collection) {
-                WriteLine(element.field);
+            WriteLine(resource.field); // foo
+            foreach (var item in collection) {
+                WriteLine(item.field);
                 // foo 1
                 // foo 2
             }
-            WriteLine(item.Property.NestedProperty); // foo
+            WriteLine(resource.NestedResource.Property); // foo
 
-            item.field = "foo x"; // change locally
-            WriteLine(item.field); // foo x
-            item.Put(); // update server
-            item.field = "foo y"; // change locally
-            WriteLine(item.field); // foo y
-            item.Get(); // overwrite local changes
-            WriteLine(item.field); // foo x
+            resource.field = "foo x"; // change locally
+            WriteLine(resource.field); // foo x
+            resource.Put(); // update server
+            resource.field = "foo y"; // change locally
+            WriteLine(resource.field); // foo y
+            resource.Get(); // overwrite local changes
+            WriteLine(resource.field); // foo x
 
-            item.Property = new() { NestedProperty = "foo x" }; // change locally
-            WriteLine(item.Property.NestedProperty); // foo x
-            item.Property.Put(); // update server
-            item.Property.NestedProperty = "foo y"; // change locally
-            WriteLine(item.Property.NestedProperty); // foo y
-            item.Property.Get(); // overwrite local changes
-            WriteLine(item.Property.NestedProperty); // foo x
+            resource.NestedResource = new() { Property = "foo x" }; // change locally
+            WriteLine(resource.NestedResource.Property); // foo x
+            resource.NestedResource.Put(); // update server
+            resource.NestedResource.Property = "foo y"; // change locally
+            WriteLine(resource.NestedResource.Property); // foo y
+            resource.NestedResource.Get(); // overwrite local changes
+            WriteLine(resource.NestedResource.Property); // foo x
         }
     }
 }

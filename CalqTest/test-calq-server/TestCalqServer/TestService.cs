@@ -3,25 +3,25 @@ using System.Collections.Generic;
 
 namespace TestCalqServer {
     public class NestedResource {
-        public string NestedProperty { get; set; }
+        public string Property { get; set; }
         public NestedResource() {
-            NestedProperty = "foo";
+            Property = "foo";
         }
     }
     public class Resource {
-        private NestedResource privateField = new();
+        private NestedResource nestedResource = new();
         public string field = "foo";
-        public NestedResource Property { get => privateField; set => privateField = value; }
+        public NestedResource NestedResource { get => nestedResource; set => nestedResource = value; }
     }
-    class HelloWorldService {
-        public Resource item = new();
+    class TestService {
+        public Resource resource = new();
         public List<Resource> collection = new() {
             new() { field = "foo 1" },
             new() { field = "foo 2" }
         };
 
         static void Main() {
-            var service = new HelloWorldService();
+            var service = new TestService();
             var server = new CalqServer(service) {
                 Prefixes = new[] { "http://localhost:8078/" }
             };

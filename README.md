@@ -26,7 +26,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   Determining projects to restore...
   All projects are up-to-date for restore.
-  TestCalqServer.HelloWorldServiceClient -> /home/ghbvft6/repos/greg-chuchro/calq/CalqTest/bin/Release/net5.0/test-calq-server/TestCalqServer/bin/Release/net5.0/Calq/TestCalqServer.HelloWorldServiceClient/bin/Release/net5.0/TestCalqServer.HelloWorldServiceClient.dll
+  TestCalqServer -> /home/username/repos/greg-chuchro/calq/CalqTest/bin/Debug/net5.0/test-calq-server/TestCalqServer/bin/Release/net5.0/Calq/TestCalqServer/bin/Release/net5.0/TestCalqServer.dll
 
 Build succeeded.
     0 Warning(s)
@@ -36,7 +36,7 @@ Time Elapsed 00:00:00.60
 ```
 The generated DLL will contain a ready to use client class and all necessary classes redefined under `Calq` namespace.
 ### Example
-[CalqTest/test-calq-server/TestCalqServer/HelloWorldService.cs](CalqTest/test-calq-server/TestCalqServer/HelloWorldService.cs)
+[CalqTest/test-calq-server/TestCalqServer/TestService.cs](CalqTest/test-calq-server/TestCalqServer/TestService.cs)
 ```csharp
 public class NestedResource {
     public string Property { get; set; }
